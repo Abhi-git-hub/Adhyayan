@@ -1,3 +1,0 @@
-@echo off
-echo Starting Adhyayan Server on port 3001...
-node server.js 
