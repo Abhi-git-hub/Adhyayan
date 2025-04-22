@@ -1,117 +1,70 @@
-# Adhyayan Website
+# Getting Started with Create React App
 
-A student management system for educational institutions. This application enables teachers to manage attendance, upload notes, and record test scores, while students can view their attendance, download study notes, and check their test results.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Prerequisites
+## Available Scripts
 
-- Node.js (v14.x or higher)
-- MongoDB (local or Atlas)
-- npm or yarn
+In the project directory, you can run:
 
-## Setup Instructions
+### `npm start`
 
-### Server Setup
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-1. Navigate to the server directory:
-```powershell
-cd server
-```
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-2. Install dependencies:
-```powershell
-npm install
-```
+### `npm test`
 
-3. Create a `config/default.json` file with the following content:
-```json
-{
-  "mongoURI": "your_mongodb_connection_string",
-  "jwtSecret": "your_jwt_secret_key",
-  "jwtExpiration": 3600
-}
-```
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-4. Start the server:
-```powershell
-npm start
-```
+### `npm run build`
 
-### Client Setup
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-1. Navigate to the client directory:
-```powershell
-cd client
-```
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-2. Install dependencies:
-```powershell
-npm install
-```
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-3. Start the client:
-```powershell
-npm start
-```
+### `npm run eject`
 
-## Running the Application in Windows PowerShell
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-Since Windows PowerShell doesn't support the `&&` operator for command chaining, you should use either of these approaches:
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-### Option 1: Run commands separately
-```powershell
-# First terminal
-cd server
-npm start
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-# Second terminal
-cd client
-npm start
-```
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-### Option 2: Use a single line with semicolons
-```powershell
-cd server; npm start
-cd client; npm start
-```
+## Learn More
 
-## Common Issues and Solutions
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-1. **Authentication Issues**: If pages are not displaying or API calls are failing, check if your authentication token is valid. Try logging out and logging back in.
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-2. **Missing Uploads Directory**: If file uploads are failing, make sure the server has permissions to create and write to the `uploads` directory.
+### Code Splitting
 
-3. **Database Connection**: Ensure your MongoDB instance is running and the connection string in `config/default.json` is correct.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-4. **API Endpoints**: All API endpoints require authentication. Make sure to include the token in the Authorization header for all requests.
+### Analyzing the Bundle Size
 
-## Features
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-- **User Authentication**: Separate login for students and teachers
-- **Teacher Features**: Take attendance, upload study notes, record test scores
-- **Student Features**: View attendance, download notes, check test scores
-- **Profile Management**: Update personal information
+### Making a Progressive Web App
 
-## Troubleshooting Common Issues
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-- **Student/Teacher Pages Not Visible**: Make sure you're logged in with the correct user type and your authentication token is valid.
-- **Attendance Not Saving**: Check if the batch is correctly selected and all fields are properly filled.
-- **File Upload Issues**: Ensure the file is a PDF under 10MB in size.
-- **Download Problems**: Verify that the file exists in the server's uploads directory.
+### Advanced Configuration
 
-## Project Structure
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-```
-adhyayan-website/
-├── middleware/       # Authentication middleware
-├── models/           # MongoDB models
-├── public/           # Static files
-├── routes/           # API routes
-├── .env              # Environment variables
-├── package.json      # Project dependencies
-├── README.md         # Project documentation
-└── server.js         # Main server file
-```
+### Deployment
 
-## License
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-This project is licensed under the MIT License. 
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

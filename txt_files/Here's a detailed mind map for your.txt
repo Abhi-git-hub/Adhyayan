@@ -1,0 +1,154 @@
+Here's a detailed **mind map** for your **Adhyayan Classes website** with **student** and **teacher login modes**:  
+
+---
+
+### **Main Structure**
+1. **Homepage**
+   - Welcome banner.
+   - Login buttons (Student Login & Teacher Login).
+   - Call-to-action sections for new users (e.g., "Register Now," "Know More").
+
+2. **Login System**
+   - **Separate Portals**:
+     - **Student Login:** Requires Student ID & Password.
+     - **Teacher Login:** Requires Teacher ID & Password.
+   - Forgot Password option for both.
+
+---
+
+### **Student Portal (After Login)**
+
+1. **Dashboard**
+   - Student Profile:
+     - Name, Class, Roll Number, Contact Information.
+     - Profile picture (editable).
+   - Notifications: Alerts for upcoming tests, notes, or attendance warnings.
+
+2. **Attendance Page**
+   - Visualized Attendance:
+     - Monthly attendance percentage.
+     - Daily attendance records (marked as Present/Absent/Late).
+   - Attendance Trends: Graph showing attendance over time.
+
+3. **Test Records**
+   - List of all test scores:
+     - Test Name, Date, Subject, Marks Scored, Total Marks.
+   - Downloadable Report Card (PDF).
+   - Performance Analysis:
+     - Bar/Line chart comparing test performances over time.
+
+4. **Notes Section**
+   - Subject-wise notes categorized.
+   - Downloadable PDFs.
+   - Mock Test Section:
+     - Practice tests for each subject.
+     - Timer for mock test completion.
+     - Automatic scoring system for mock tests (if objective-based).
+
+5. **Feedback Page**
+   - Feedback from Teachers:
+     - Individualized remarks (e.g., Strengths, Areas for Improvement).
+   - Feedback History: Sorted by subjects or time.
+   - Reply Option (Optional): Students can acknowledge or respond to feedback.
+
+6. **Referral Program**
+   - Unique Referral Code (generated for each student).
+   - Status of Referrals:
+     - How many have joined using the code.
+     - Fee Reduction earned (10% for both the student and the referred).
+   - Shareable Referral Links (WhatsApp, Email, Social Media).
+
+7. **Parent-Teacher Connect**
+   - Direct Call Option:
+     - List of Subject Teachers with Contact Buttons (calls made via phone).
+   - Parent Feedback Box:
+     - Parents can leave notes or comments for teachers.
+
+---
+
+### **Teacher Portal (After Login)**
+
+1. **Dashboard**
+   - Teacher Profile:
+     - Name, Subjects Taught, Contact Info, Profile Picture.
+   - Notifications: Alerts for upcoming lectures, pending feedback to provide, etc.
+
+2. **Attendance Management**
+   - View Attendance:
+     - Attendance data for each class and subject.
+     - Filter by student names or dates.
+   - Update Attendance:
+     - Mark Present/Absent/Late.
+     - Bulk Attendance Update (upload via Excel or CSV).
+
+3. **Classroom Management**
+   - Lecture Planning:
+     - Calendar for upcoming lectures with reminders.
+     - AI-Powered Suggestions for topics to cover based on the syllabus.
+   - Notes Creation:
+     - Create and upload notes directly (PDF, Word).
+     - AI-Generated Notes:
+       - Provide topics, and the system generates pre-written notes for editing.
+   - Test Creation:
+     - Manual Test Creation:
+       - Add questions and format.
+     - AI-Generated Tests:
+       - Generate tests (objective or subjective) based on the syllabus or input topics.
+     - Save or publish tests directly to student accounts.
+
+4. **Student Performance Tracking**
+   - View Individual Student Profiles:
+     - Attendance, Test Scores, Notes Download Activity, etc.
+   - Update Test Records:
+     - Manually add or update test scores for students.
+   - Performance Trends:
+     - Identify top-performing and struggling students with performance graphs.
+
+5. **Feedback System**
+   - Provide Feedback:
+     - Remarks for individual students.
+     - Remarks for entire classes (optional).
+   - View Feedback History:
+     - See past feedback given to any student.
+
+---
+
+### **Admin Features**  
+(For your backend team)  
+1. **Student & Teacher Management**
+   - Add, Update, or Remove Users.
+   - Assign Student IDs and Teacher IDs.
+
+2. **Data Analysis**
+   - Overall Attendance Report.
+   - Test Scores Summary by Class or Subject.
+   - Referral Program Insights:
+     - Number of active referrals.
+     - Discounts awarded.
+
+3. **AI Features Management**
+   - Train/Test the AI module for notes or test generation.
+   - Adjust parameters for AI-generated outputs.
+
+4. **Communication Management**
+   - Send mass notifications (via email or portal) to students/teachers.
+   - Parent communication records.
+
+5. **Referral Management**
+   - Monitor referral system activity.
+   - Approve/Reject discounts if needed.
+
+---
+
+### **Design Layout**
+1. **Theme**
+   - Professional and clean with Adhyayan Classes branding.
+   - Primary Colors: Blue (Trust, Stability), White (Clean, Modern), Yellow (Highlight Sections).
+
+2. **Navigation**
+   - Sticky header with tabs (Dashboard, Attendance, Notes, Feedback, Referral Program, etc.).
+   - Sidebar for additional tools in the Teacher Portal.
+
+3. **Mobile-Friendly**
+   - Responsive design to ensure proper functionality on all devices.
+
