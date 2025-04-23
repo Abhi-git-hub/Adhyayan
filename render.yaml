@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: adhyayan-website
+    env: node
+    buildCommand: npm run render-build
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://admin:1008@cluster0.xwpp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: adhyayan_secret_key_2025_secure
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true 

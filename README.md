@@ -1,70 +1,169 @@
-# Getting Started with Create React App
+# Adhyayan Website
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A student management system for educational institutions. This application enables teachers to manage attendance, upload notes, and record test scores, while students can view their attendance, download study notes, and check their test results.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+- Node.js (v16.x or higher)
+- MongoDB (local or Atlas)
+- npm (v8 or higher)
 
-### `npm start`
+## Setup Instructions
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Server Setup
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Navigate to the server directory:
+```powershell
+cd server
+```
 
-### `npm test`
+2. Install dependencies:
+```powershell
+npm install
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. Create a `.env` file with the following content:
+```
+MONGODB_URI=mongodb+srv://admin:1008@cluster0.xwpp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=adhyayan_secret_key_2025_secure
+PORT=3000
+```
 
-### `npm run build`
+4. Start the server:
+```powershell
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Client Setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Navigate to the client directory:
+```powershell
+cd client
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
+```powershell
+npm install
+```
 
-### `npm run eject`
+3. Start the client:
+```powershell
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Running the Application in Windows PowerShell
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Since Windows PowerShell doesn't support the `&&` operator for command chaining, you should use either of these approaches:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Option 1: Run commands separately
+```powershell
+# First terminal
+cd server
+npm start
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# Second terminal
+cd client
+npm start
+```
 
-## Learn More
+### Option 2: Use a single line with semicolons
+```powershell
+cd server; npm start
+cd client; npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Deployment Instructions
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### MongoDB Atlas Setup
 
-### Code Splitting
+1. Create an account on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new cluster
+3. Set up a database user with read/write permissions
+4. Whitelist your IP address or use 0.0.0.0/0 for all IPs
+5. Get your connection string: `mongodb+srv://admin:1008@cluster0.xwpp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+6. Update your `.env` file with this connection string
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Deploying to Render
 
-### Analyzing the Bundle Size
+1. Fork or push your code to a GitHub repository
+2. Log in to [Render](https://render.com)
+3. Click "New" and select "Web Service"
+4. Connect your GitHub repository
+5. Configure your service:
+   - Name: `adhyayan-website`
+   - Environment: `Node`
+   - Build Command: `npm run render-build`
+   - Start Command: `npm start`
+6. Add environment variables:
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `NODE_ENV`: `production`
+7. Click "Create Web Service"
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Deploying to Vercel
 
-### Making a Progressive Web App
+1. Fork or push your code to a GitHub repository
+2. Log in to [Vercel](https://vercel.com)
+3. Click "New Project" and import your GitHub repository
+4. Configure your project:
+   - Framework Preset: `Other`
+   - Root Directory: `/`
+   - Build Command: `npm run vercel-build`
+   - Output Directory: `client/build`
+5. Add environment variables:
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `NODE_ENV`: `production`
+6. Click "Deploy"
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Testing MongoDB Atlas Connection
 
-### Advanced Configuration
+To test your MongoDB Atlas connection:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```bash
+npm run check-db
+```
 
-### Deployment
+This will attempt to connect to your MongoDB Atlas database and display the collections.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Common Issues and Solutions
 
-### `npm run build` fails to minify
+1. **Authentication Issues**: If pages are not displaying or API calls are failing, check if your authentication token is valid. Try logging out and logging back in.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+2. **Missing Uploads Directory**: If file uploads are failing, make sure the server has permissions to create and write to the `uploads` directory.
+
+3. **Database Connection**: Ensure your MongoDB Atlas connection string is correct and your IP is whitelisted.
+
+4. **API Endpoints**: All API endpoints require authentication. Make sure to include the token in the Authorization header for all requests.
+
+5. **CORS Issues**: If you're getting CORS errors, check that the client origin is properly set in the server's CORS configuration.
+
+## Features
+
+- **User Authentication**: Separate login for students and teachers
+- **Teacher Features**: Take attendance, upload study notes, record test scores
+- **Student Features**: View attendance, download notes, check test scores
+- **Profile Management**: Update personal information
+
+## Project Structure
+
+```
+adhyayan-website/
+├── client/           # React frontend
+├── middleware/       # Authentication middleware
+├── models/           # MongoDB models
+├── public/           # Static files
+├── routes/           # API routes
+├── scripts/          # Utility scripts
+├── uploads/          # Uploaded files
+├── .env              # Environment variables
+├── package.json      # Project dependencies
+├── server.js         # Main server file
+├── vercel.json       # Vercel configuration
+├── render.yaml       # Render configuration
+└── README.md         # Project documentation
+```
+
+## License
+
+This project is licensed under the MIT License. 
