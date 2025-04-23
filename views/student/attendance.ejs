@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <h2>My Attendance</h2>
+  
+  <!-- Attendance Summary -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Attendance Summary</h5>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h6>Present</h6>
+              <h3><%= attendanceSummary.present %></h3>
+              <p class="mb-0"><%= attendanceSummary.presentPercentage %>%</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-danger text-white">
+            <div class="card-body">
+              <h6>Absent</h6>
+              <h3><%= attendanceSummary.absent %></h3>
+              <p class="mb-0"><%= attendanceSummary.absentPercentage %>%</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-warning text-white">
+            <div class="card-body">
+              <h6>Late</h6>
+              <h3><%= attendanceSummary.late %></h3>
+              <p class="mb-0"><%= attendanceSummary.latePercentage %>%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Attendance History -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Attendance History</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (attendanceHistory && attendanceHistory.length > 0) { %>
+              <% attendanceHistory.forEach(record => { %>
+                <tr>
+                  <td><%= record.date.toLocaleDateString() %></td>
+                  <td>
+                    <span class="badge <%= record.status === 'present' ? 'bg-success' : 
+                                       record.status === 'absent' ? 'bg-danger' : 'bg-warning' %>">
+                      <%= record.status.charAt(0).toUpperCase() + record.status.slice(1) %>
+                    </span>
+                  </td>
+                  <td><%= record.notes || '-' %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" class="text-center">No attendance records found</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %> 

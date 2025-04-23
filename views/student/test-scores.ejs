@@ -1,0 +1,87 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <h2>My Test Scores</h2>
+  
+  <!-- Subject-wise Performance -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Subject-wise Performance</h5>
+      <div class="row">
+        <% if (Object.keys(subjectPerformance).length > 0) { %>
+          <% Object.entries(subjectPerformance).forEach(([subject, performance]) => { %>
+            <div class="col-md-4 mb-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title"><%= subject %></h6>
+                  <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: <%= performance.averagePercentage %>%;"
+                         aria-valuenow="<%= performance.averagePercentage %>" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                      <%= performance.averagePercentage %>%
+                    </div>
+                  </div>
+                  <p class="mb-0">Average Score: <%= performance.averageScore %>/<%= performance.maxScore %></p>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="col-12">
+            <p class="text-center">No test scores available</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Test History -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Test History</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Subject</th>
+              <th>Test Name</th>
+              <th>Score</th>
+              <th>Max Score</th>
+              <th>Percentage</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (testHistory && testHistory.length > 0) { %>
+              <% testHistory.forEach(test => { %>
+                <tr>
+                  <td><%= test.date.toLocaleDateString() %></td>
+                  <td><%= test.subject %></td>
+                  <td><%= test.testName %></td>
+                  <td><%= test.score %></td>
+                  <td><%= test.maxScore %></td>
+                  <td>
+                    <span class="badge <%= test.percentage >= 80 ? 'bg-success' : 
+                                       test.percentage >= 60 ? 'bg-warning' : 'bg-danger' %>">
+                      <%= test.percentage %>%
+                    </span>
+                  </td>
+                  <td><%= test.remarks || '-' %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center">No test scores available</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %> 

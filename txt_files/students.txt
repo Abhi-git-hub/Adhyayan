@@ -1,0 +1,50 @@
+Batch name: Udbhav (6th to 8th)
+Students:
+1. Name: Lakshay Singhal
+	class: 7th
+	Phone no. 8595715727
+	Date of admission: 01.03.2025
+
+2. Name: Sayyam Kumar
+	class: 8th
+	Phone no. 7678144622
+	Date of admission: 01.10.2024
+
+3. Name: Yaksh Bindal
+	class: 8th
+	Phone no. 9818146101
+	Date of admission: 01.04.2024
+
+4. Name: Sushant
+	class: 8th
+	Phone no. 8527291543
+	Date of admission: 01.02.2025
+
+Batch name: Maadhyam Batch (9th)
+Students:
+1. Name: Abhey Yadav
+	class: 9th
+	Phone no. 9310007717
+	Date of admission: 01.08.2024
+
+2. Name: Ram Singhal
+	class: 9th
+	Phone no. 8595715727
+	Date of admission: 01.03.2025
+
+Batch name: Vedant (10th)
+Students:
+1. Name: Umang Pawar
+	class: 10th
+	Phone no. 7048960212
+	Date of admission: 01.06.2023
+
+2. Name: Deepanshu
+	class: 10th
+	Phone no. 8920887722
+	Date of admission: 01.10.2023
+
+
+
+
+
