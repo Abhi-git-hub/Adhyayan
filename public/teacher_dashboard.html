@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard - Adhyayan Classes</title>
+  <style>
+    /* Global Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ffffff, #001f4d);
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header Styles */
+    header {
+      background-color: #001f4d;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-container img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info button {
+      background: linear-gradient(90deg, #ffd700, #c0c0c0);
+      color: #001f4d;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Main Content Styles */
+    main {
+      flex: 1;
+      padding: 2rem;
+      display: flex;
+      gap: 2rem;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      margin-bottom: 1rem;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: #001f4d;
+      font-weight: bold;
+      display: block;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      background-color: #f0f0f0;
+    }
+
+    .content {
+      flex: 1;
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .content h2 {
+      color: #001f4d;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #ffd700;
+      padding-bottom: 0.5rem;
+    }
+
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #f9f9f9, #e9e9e9);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      color: #001f4d;
+      margin-bottom: 1rem;
+    }
+
+    .card p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .card-stat {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #001f4d;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Footer Styles */
+    footer {
+      background-color: #001f4d;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <header>
+      <div class="logo-container">
+        <img src="logo.jpg" alt="Adhyayan Classes">
+        <h1>Teacher Dashboard</h1>
+      </div>
+      <div class="user-info">
+        <span id="teacherName">Loading...</span>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="sidebar">
+        <ul>
+          <li><a href="#" class="active">Dashboard</a></li>
+          <li><a href="#">My Courses</a></li>
+          <li><a href="#">Students</a></li>
+          <li><a href="#">Assignments</a></li>
+          <li><a href="#">Grades</a></li>
+          <li><a href="#">Messages</a></li>
+          <li><a href="#">Profile</a></li>
+        </ul>
+      </div>
+
+      <div class="content">
+        <h2>Dashboard Overview</h2>
+        <div class="dashboard-cards">
+          <div class="card">
+            <h3>Active Courses</h3>
+            <div class="card-stat">5</div>
+            <p>Courses you are currently teaching</p>
+          </div>
+          <div class="card">
+            <h3>Total Students</h3>
+            <div class="card-stat">120</div>
+            <p>Students enrolled in your courses</p>
+          </div>
+          <div class="card">
+            <h3>Pending Assignments</h3>
+            <div class="card-stat">8</div>
+            <p>Assignments waiting to be graded</p>
+          </div>
+          <div class="card">
+            <h3>Upcoming Classes</h3>
+            <div class="card-stat">3</div>
+            <p>Classes scheduled in the next 7 days</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      &copy; 2025 Adhyayan Classes. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/teacher-login';
+        return;
+      }
+
+      // Get teacher data
+      fetchTeacherData(token);
+
+      // Logout functionality
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('teacherData');
+        window.location.href = '/teacher-login';
+      });
+    });
+
+    async function fetchTeacherData(token) {
+      try {
+        // Try to get cached teacher data first
+        const cachedData = localStorage.getItem('teacherData');
+        if (cachedData) {
+          const teacherData = JSON.parse(cachedData);
+          document.getElementById('teacherName').textContent = teacherData.name;
+          return;
+        }
+
+        // If no cached data, fetch from server
+        const response = await fetch('http://localhost:5000/api/auth/teacher', {
+          method: 'GET',
+          headers: {
+            'x-auth-token': token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch teacher data');
+        }
+
+        const data = await response.json();
+        document.getElementById('teacherName').textContent = data.name;
+        
+        // Cache the teacher data
+        localStorage.setItem('teacherData', JSON.stringify(data));
+      } catch (error) {
+        console.error('Error fetching teacher data:', error);
+        document.getElementById('teacherName').textContent = 'Teacher';
+      }
+    }
+  </script>
+</body>
+</html> 
