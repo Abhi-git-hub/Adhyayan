@@ -81,6 +81,7 @@ console.log('Build directory exists:', buildExists);
 
 if (buildExists) {
   app.use(express.static(buildPath));
+  console.log('Serving static files from', buildPath);
 }
 
 // Connect to MongoDB
@@ -213,6 +214,14 @@ app.use('/api/*', (req, res) => {
 // Handle any other requests with our React app in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
+    // Check if the file exists in the build directory
+    const filePath = path.join(__dirname, 'client/build', req.path);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      return res.sendFile(filePath);
+    }
+    
+    // Otherwise, serve the index.html file
+    console.log('Serving index.html for path:', req.path);
     res.sendFile(path.join(__dirname, 'client/build/index.html'));
   });
 }
