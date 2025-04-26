@@ -1,18 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "client/build",
   "builds": [
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
     }
   ],
   "routes": [
@@ -26,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "client/build/$1"
+      "dest": "server.js"
     }
   ],
   "env": {
@@ -34,4 +25,4 @@
     "JWT_SECRET": "adhyayan_secret_key_2025_secure",
     "NODE_ENV": "production"
   }
-} 
+}
