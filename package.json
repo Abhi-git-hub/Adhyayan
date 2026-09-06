@@ -1,23 +1,21 @@
 {
   "name": "adhyayan-classes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Student Management System for Adhyayan Classes",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "server": "nodemon server.js",
-    "client": "cd client && npm start",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install-all": "npm install && cd client && npm install",
-    "build": "cd client && npm run build",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm run install-all && npm run build",
-    "render-build": "npm install && node scripts/build-client.js",
-    "vercel-build": "npm install && node scripts/build-client.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "build": "node build-client.js",
+    "install-all": "npm install",
+    "heroku-postbuild": "npm run build",
+    "render-build": "npm run build",
+    "vercel-build": "npm run build",
+    "test": "node --check server.js",
     "init-db": "node scripts/init-db.js",
     "populate-db": "node scripts/populate-db.js",
     "add-test-users": "node scripts/add-test-users.js",
-    "client-install": "cd client && npm install",
     "deploy": "node scripts/deploy.js",
     "check-db": "node scripts/check-atlas-connection.js"
   },
@@ -25,9 +23,10 @@
     "axios": "^1.8.2",
     "bcryptjs": "^2.4.3",
     "chokidar": "^3.5.3",
-    "compression": "^1.8.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "ejs": "^6.0.1",
     "express": "^4.18.2",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
@@ -39,7 +38,7 @@
     "nodemon": "^3.1.9"
   },
   "engines": {
-    "node": ">=16",
-    "npm": ">=8"
+    "node": ">=18",
+    "npm": ">=9"
   }
 }
