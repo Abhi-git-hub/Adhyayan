@@ -1,128 +1,106 @@
 const jwt = require('jsonwebtoken');
-const Teacher = require('../models/Teacher');
-const Student = require('../models/Student');
 
-// Authentication middleware
-exports.auth = async (req, res, next) => {
+const JWT_ISSUER = 'adhyayan-api';
+const JWT_AUDIENCE = 'adhyayan-client';
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be configured with at least 32 characters');
+  }
+  return secret;
+}
+
+function extractBearerToken(req) {
+  const header = req.get('authorization');
+  if (!header) return null;
+
+  const [scheme, token] = header.trim().split(/\s+/);
+  if (scheme !== 'Bearer' || !token) return null;
+
+  return token;
+}
+
+exports.auth = (req, res, next) => {
   try {
-    console.log(`Auth middleware - Request to ${req.method} ${req.originalUrl}`);
-    console.log('Auth middleware - Request content type:', req.headers['content-type']);
-    
-    // Get token from headers (try both formats)
-    let token = req.header('x-auth-token');
-    
-    // If token not found in x-auth-token header, try Authorization header
-    if (!token) {
-      const authHeader = req.header('Authorization');
-      
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        console.log('Auth middleware - Token extracted from Authorization header');
-      }
-    }
-    
-    // Also check for token in query parameters (for GET requests)
-    if (!token && req.query && req.query.token) {
-      token = req.query.token;
-      console.log('Auth middleware - Token found in query parameters');
-    }
-    
-    // Also check for token in request body (for POST/PUT requests)
-    if (!token && req.body && req.body.token) {
-      token = req.body.token;
-      console.log('Auth middleware - Token found in request body');
-    }
-    
-    console.log('Auth middleware - Token found:', !!token);
+    const token = extractBearerToken(req);
 
-    // Check if no token
     if (!token) {
-      console.log('Auth middleware - No token found in request');
-      return res.status(401).json({ message: 'No token, authorization denied' });
+      return res.status(401).json({
+        message: 'Authentication required',
+        error: 'missing_token'
+      });
     }
 
-    // Use a fallback JWT secret if environment variable is not set
-    const jwtSecret = process.env.JWT_SECRET || 'adhyayanclassessecret';
-    
-    // Verify token
-    try {
-      console.log('Auth middleware - Verifying token...');
-      const decoded = jwt.verify(token, jwtSecret);
-      console.log('Auth middleware - Token verified successfully for user:', decoded.id);
-      
-      // Add user from payload
-      req.user = decoded;
-      
-      // Save token for subsequent middleware in this request
-      req.token = token;
-      
-      next();
-    } catch (jwtError) {
-      console.error('Auth middleware - JWT verification error:', jwtError.message);
-      if (jwtError.name === 'TokenExpiredError') {
-        return res.status(401).json({ 
-          message: 'Token has expired', 
-          error: 'token_expired',
-          expiredAt: jwtError.expiredAt 
-        });
-      } else if (jwtError.name === 'JsonWebTokenError') {
-        return res.status(401).json({ 
-          message: 'Invalid token', 
-          error: 'invalid_token',
-          details: jwtError.message 
-        });
-      } else {
-        return res.status(401).json({ 
-          message: 'Token verification failed', 
-          error: 'token_verification_failed',
-          details: jwtError.message 
-        });
-      }
+    const decoded = jwt.verify(token, getJwtSecret(), {
+      algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+      clockTolerance: 5
+    });
+
+    if (!decoded || typeof decoded !== 'object' || !decoded.id || !decoded.role) {
+      return res.status(401).json({
+        message: 'Invalid authentication token',
+        error: 'invalid_token'
+      });
     }
-  } catch (err) {
-    console.error('Auth middleware - Unexpected error:', err.message);
-    res.status(500).json({ message: 'Server error during authentication' });
+
+    if (!['student', 'teacher'].includes(decoded.role)) {
+      return res.status(403).json({
+        message: 'Unsupported user role',
+        error: 'invalid_role'
+      });
+    }
+
+    req.user = {
+      id: String(decoded.id),
+      name: decoded.name || '',
+      role: decoded.role,
+      batch: decoded.batch,
+      batches: Array.isArray(decoded.batches) ? decoded.batches : []
+    };
+
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        message: 'Authentication token has expired',
+        error: 'token_expired'
+      });
+    }
+
+    if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+      return res.status(401).json({
+        message: 'Invalid authentication token',
+        error: 'invalid_token'
+      });
+    }
+
+    console.error('Authentication middleware error:', error.message);
+    return res.status(500).json({ message: 'Authentication service unavailable' });
   }
 };
 
-// Teacher authorization middleware
-exports.isTeacher = async (req, res, next) => {
-  try {
-    console.log('Teacher authorization check for user:', { id: req.user.id, role: req.user.role });
-    
-    if (req.user.role !== 'teacher') {
-      console.log('Authorization failed: User is not a teacher');
-      return res.status(403).json({ message: 'Access denied. Teacher role required.' });
-    }
-    
-    // Add a debug header to show authorization was successful
-    res.setHeader('X-Auth-Role', 'teacher');
-    console.log('Teacher authorization successful');
-    
-    next();
-  } catch (err) {
-    console.error('Teacher authorization error:', err);
-    res.status(500).json({ message: 'Server error during authorization' });
+exports.isTeacher = (req, res, next) => {
+  if (req.user?.role !== 'teacher') {
+    return res.status(403).json({
+      message: 'Teacher access required',
+      error: 'forbidden'
+    });
   }
+  next();
 };
 
-// Student authorization middleware
-exports.isStudent = async (req, res, next) => {
-  try {
-    console.log('Student authorization check for user:', { id: req.user.id, role: req.user.role });
-    
-    if (req.user.role !== 'student') {
-      console.log('Authorization failed: User is not a student');
-      return res.status(403).json({ message: 'Access denied. Student role required.' });
-    }
-    
-    // Add a debug header to show authorization was successful
-    res.setHeader('X-Auth-Role', 'student');
-    console.log('Student authorization successful');
-    
-    next();
-  } catch (err) {
-    console.error('Student authorization error:', err);
-    res.status(500).json({ message: 'Server error during authorization' });
+exports.isStudent = (req, res, next) => {
+  if (req.user?.role !== 'student') {
+    return res.status(403).json({
+      message: 'Student access required',
+      error: 'forbidden'
+    });
   }
-}; 
+  next();
+};
+
+exports.JWT_ISSUER = JWT_ISSUER;
+exports.JWT_AUDIENCE = JWT_AUDIENCE;
