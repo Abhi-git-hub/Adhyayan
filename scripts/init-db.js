@@ -1,86 +1,66 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const Student = require('../models/Student');
 const Teacher = require('../models/Teacher');
 
-// Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/adhyayan';
 
-// Create test student
-const createTestStudent = async () => {
-  try {
-    // Check if test student already exists
-    const existingStudent = await Student.findOne({ username: 'student1' });
-    if (existingStudent) {
-      console.log('Test student already exists');
-      return;
-    }
-
-    // Create new test student
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('password123', salt);
-
-    const newStudent = new Student({
-      username: 'student1',
-      password: hashedPassword,
-      name: 'Test Student',
-      email: 'student@test.com',
-      grade: '10th'
-    });
-
-    await newStudent.save();
-    console.log('Test student created successfully');
-  } catch (error) {
-    console.error('Error creating test student:', error);
+async function createTestStudent() {
+  const existingStudent = await Student.findOne({ username: 'student1' });
+  if (existingStudent) {
+    console.log('Test student already exists');
+    return;
   }
-};
 
-// Create test teacher
-const createTestTeacher = async () => {
-  try {
-    // Check if test teacher already exists
-    const existingTeacher = await Teacher.findOne({ username: 'teacher1' });
-    if (existingTeacher) {
-      console.log('Test teacher already exists');
-      return;
-    }
+  await Student.create({
+    username: 'student1',
+    password: 'password123',
+    name: 'Test Student',
+    class: '10th',
+    phoneNumber: '9000000001',
+    batch: 'Udbhav'
+  });
 
-    // Create new test teacher
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('password123', salt);
+  console.log('Test student created successfully');
+}
 
-    const newTeacher = new Teacher({
-      username: 'teacher1',
-      password: hashedPassword,
-      name: 'Test Teacher',
-      email: 'teacher@test.com',
-      subject: 'Mathematics'
-    });
-
-    await newTeacher.save();
-    console.log('Test teacher created successfully');
-  } catch (error) {
-    console.error('Error creating test teacher:', error);
+async function createTestTeacher() {
+  const existingTeacher = await Teacher.findOne({ username: 'teacher1' });
+  if (existingTeacher) {
+    console.log('Test teacher already exists');
+    return;
   }
-};
 
-// Run initialization
-const initializeDatabase = async () => {
+  await Teacher.create({
+    username: 'teacher1',
+    password: 'password123',
+    name: 'Test Teacher',
+    phoneNumber: '9000000002',
+    email: 'teacher@test.com',
+    subjects: ['Mathematics'],
+    batches: ['Udbhav']
+  });
+
+  console.log('Test teacher created successfully');
+}
+
+async function initializeDatabase() {
   try {
+    await mongoose.connect(mongoUri);
+    console.log('MongoDB connected');
+
     await createTestStudent();
     await createTestTeacher();
-    console.log('Database initialization completed');
-    process.exit(0);
-  } catch (error) {
-    console.error('Database initialization failed:', error);
-    process.exit(1);
-  }
-};
 
-initializeDatabase(); 
+    console.log('Database initialization completed');
+  } catch (error) {
+    console.error('Database initialization failed:', error.message);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.connection.close();
+  }
+}
+
+initializeDatabase();
