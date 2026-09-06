@@ -1,20 +1,28 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const PASSWORD_SALT_ROUNDS = 12;
+
 const TeacherSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
     unique: true,
-    maxLength: 12
+    trim: true,
+    lowercase: true,
+    maxLength: 32,
+    index: true
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    minLength: 8
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    maxLength: 100
   },
   subjects: {
     type: [String],
@@ -28,11 +36,14 @@ const TeacherSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     required: true,
+    trim: true,
     default: '0000000000'
   },
   email: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    lowercase: true
   },
   dateOfJoining: {
     type: Date,
@@ -52,41 +63,22 @@ const TeacherSchema = new mongoose.Schema({
   }
 });
 
-// DISABLED password hashing to allow plain text passwords
-// TeacherSchema.pre('save', async function(next) {
-//   if (!this.isModified('password')) {
-//     return next();
-//   }
-//   
-//   try {
-//     const salt = await bcrypt.genSalt(10);
-//     this.password = await bcrypt.hash(this.password, salt);
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// Method to compare passwords - supports both plain text and hashed
-TeacherSchema.methods.comparePassword = async function(candidatePassword) {
+TeacherSchema.pre('save', async function hashPassword(next) {
   try {
-    // For plain text passwords (direct comparison)
-    if (this.password === candidatePassword) {
-      return true;
-    }
-    
-    // For hashed passwords (bcrypt comparison)
-    try {
-      const bcryptMatch = await bcrypt.compare(candidatePassword, this.password);
-      return bcryptMatch;
-    } catch (err) {
-      // If bcrypt comparison fails (e.g., password is not hashed), return false
-      return false;
-    }
+    if (!this.isModified('password')) return next();
+
+    // Preserve bcrypt hashes and transparently migrate legacy plaintext values.
+    if (/^\$2[aby]\$\d{2}\$/.test(this.password)) return next();
+
+    this.password = await bcrypt.hash(this.password, PASSWORD_SALT_ROUNDS);
+    next();
   } catch (error) {
-    console.error('Password comparison error:', error);
-    return false;
+    next(error);
   }
+});
+
+TeacherSchema.methods.comparePassword = function comparePassword(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model('Teacher', TeacherSchema);
