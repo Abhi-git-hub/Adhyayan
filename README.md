@@ -1,169 +1,121 @@
-# Adhyayan Website
+# Adhyayan — Student Management Platform
 
-A student management system for educational institutions. This application enables teachers to manage attendance, upload notes, and record test scores, while students can view their attendance, download study notes, and check their test results.
+A full-stack student management platform for educational institutions, built with React, Node.js, Express, and MongoDB.
 
-## Prerequisites
+## What it demonstrates
 
-- Node.js (v16.x or higher)
-- MongoDB (local or Atlas)
-- npm (v8 or higher)
+- Role-based workflows for teachers and students
+- Authentication and protected API routes
+- Attendance management
+- Study-note upload and download flows
+- Test-score management
+- Student profile management
+- MongoDB-backed application data
+- Production-oriented deployment configuration for Render and Vercel
 
-## Setup Instructions
+## Product flow
 
-### Server Setup
+**Teacher:** sign in → manage attendance → upload notes → record results
 
-1. Navigate to the server directory:
-```powershell
-cd server
+**Student:** sign in → view attendance → download notes → check results → manage profile
+
+## Architecture
+
+```text
+React client
+    │
+    ▼
+Express / Node.js API
+    │
+    ├── Authentication middleware
+    ├── REST routes
+    ├── Mongoose models
+    └── File uploads
+            │
+            ▼
+        MongoDB Atlas
 ```
 
-2. Install dependencies:
-```powershell
-npm install
+## Stack
+
+**Frontend:** React, CSS
+
+**Backend:** Node.js, Express, JWT, bcrypt
+
+**Database:** MongoDB, Mongoose
+
+**Infrastructure:** Render / Vercel configuration
+
+## Project structure
+
+```text
+Adhyayan/
+├── client/           # React application
+├── middleware/       # Authentication middleware
+├── models/           # Mongoose models
+├── routes/           # API routes
+├── scripts/          # Database and deployment utilities
+├── public/           # Static assets
+├── server.js         # API entry point
+├── vercel.json
+├── render.yaml
+└── package.json
 ```
 
-3. Create a `.env` file with the following content:
-```
-MONGODB_URI=mongodb+srv://admin:1008@cluster0.xwpp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-JWT_SECRET=adhyayan_secret_key_2025_secure
-PORT=3000
-```
+## Local development
 
-4. Start the server:
-```powershell
-npm start
-```
-
-### Client Setup
-
-1. Navigate to the client directory:
-```powershell
-cd client
-```
-
-2. Install dependencies:
-```powershell
-npm install
-```
-
-3. Start the client:
-```powershell
-npm start
-```
-
-## Running the Application in Windows PowerShell
-
-Since Windows PowerShell doesn't support the `&&` operator for command chaining, you should use either of these approaches:
-
-### Option 1: Run commands separately
-```powershell
-# First terminal
-cd server
-npm start
-
-# Second terminal
-cd client
-npm start
-```
-
-### Option 2: Use a single line with semicolons
-```powershell
-cd server; npm start
-cd client; npm start
-```
-
-## Deployment Instructions
-
-### MongoDB Atlas Setup
-
-1. Create an account on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Create a new cluster
-3. Set up a database user with read/write permissions
-4. Whitelist your IP address or use 0.0.0.0/0 for all IPs
-5. Get your connection string: `mongodb+srv://admin:1008@cluster0.xwpp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-6. Update your `.env` file with this connection string
-
-### Deploying to Render
-
-1. Fork or push your code to a GitHub repository
-2. Log in to [Render](https://render.com)
-3. Click "New" and select "Web Service"
-4. Connect your GitHub repository
-5. Configure your service:
-   - Name: `adhyayan-website`
-   - Environment: `Node`
-   - Build Command: `npm run render-build`
-   - Start Command: `npm start`
-6. Add environment variables:
-   - `MONGODB_URI`: Your MongoDB Atlas connection string
-   - `JWT_SECRET`: Your JWT secret key
-   - `NODE_ENV`: `production`
-7. Click "Create Web Service"
-
-### Deploying to Vercel
-
-1. Fork or push your code to a GitHub repository
-2. Log in to [Vercel](https://vercel.com)
-3. Click "New Project" and import your GitHub repository
-4. Configure your project:
-   - Framework Preset: `Other`
-   - Root Directory: `/`
-   - Build Command: `npm run vercel-build`
-   - Output Directory: `client/build`
-5. Add environment variables:
-   - `MONGODB_URI`: Your MongoDB Atlas connection string
-   - `JWT_SECRET`: Your JWT secret key
-   - `NODE_ENV`: `production`
-6. Click "Deploy"
-
-### Testing MongoDB Atlas Connection
-
-To test your MongoDB Atlas connection:
+### 1. Install dependencies
 
 ```bash
-npm run check-db
+npm install
+cd client
+npm install
+cd ..
 ```
 
-This will attempt to connect to your MongoDB Atlas database and display the collections.
+### 2. Configure environment variables
 
-## Common Issues and Solutions
+Create a local `.env` file. Do not commit credentials.
 
-1. **Authentication Issues**: If pages are not displaying or API calls are failing, check if your authentication token is valid. Try logging out and logging back in.
-
-2. **Missing Uploads Directory**: If file uploads are failing, make sure the server has permissions to create and write to the `uploads` directory.
-
-3. **Database Connection**: Ensure your MongoDB Atlas connection string is correct and your IP is whitelisted.
-
-4. **API Endpoints**: All API endpoints require authentication. Make sure to include the token in the Authorization header for all requests.
-
-5. **CORS Issues**: If you're getting CORS errors, check that the client origin is properly set in the server's CORS configuration.
-
-## Features
-
-- **User Authentication**: Separate login for students and teachers
-- **Teacher Features**: Take attendance, upload study notes, record test scores
-- **Student Features**: View attendance, download notes, check test scores
-- **Profile Management**: Update personal information
-
-## Project Structure
-
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_long_random_secret
+PORT=3000
+NODE_ENV=development
 ```
-adhyayan-website/
-├── client/           # React frontend
-├── middleware/       # Authentication middleware
-├── models/           # MongoDB models
-├── public/           # Static files
-├── routes/           # API routes
-├── scripts/          # Utility scripts
-├── uploads/          # Uploaded files
-├── .env              # Environment variables
-├── package.json      # Project dependencies
-├── server.js         # Main server file
-├── vercel.json       # Vercel configuration
-├── render.yaml       # Render configuration
-└── README.md         # Project documentation
+
+### 3. Start the application
+
+Backend:
+
+```bash
+npm start
 ```
+
+Frontend:
+
+```bash
+npm run client
+```
+
+Or, when supported by the local environment:
+
+```bash
+npm run dev
+```
+
+## Production readiness notes
+
+The repository includes deployment configuration and separates environment-specific credentials from source code. Before production use, verify database access controls, secret rotation, CORS origins, upload storage, logging, and HTTPS configuration.
+
+## Security
+
+Never place database passwords, JWT secrets, API keys, or other credentials in `README.md`, source files, or committed environment files. Use `.env` locally and platform-managed environment variables in production.
+
+## Status
+
+Portfolio project demonstrating end-to-end product development for an education use case.
 
 ## License
 
-This project is licensed under the MIT License. 
+MIT
