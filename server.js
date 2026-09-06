@@ -7,233 +7,239 @@ const fs = require('fs');
 const session = require('express-session');
 const { initWatcher } = require('./utils/file-watcher');
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Middleware
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://adhyayan-website.vercel.app', 'https://adhyayan-website.onrender.com', process.env.FRONTEND_URL] 
-    : ['http://localhost:3000', 'http://localhost:3001'],
+function validateEnvironment() {
+  if (!isProduction) return;
+
+  const required = ['MONGODB_URI', 'JWT_SECRET', 'SESSION_SECRET', 'FRONTEND_URL'];
+  const missing = required.filter((key) => !process.env[key]);
+
+  if (missing.length) {
+    throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+  }
+
+  if (process.env.JWT_SECRET.length < 32 || process.env.SESSION_SECRET.length < 32) {
+    throw new Error('JWT_SECRET and SESSION_SECRET must each be at least 32 characters long');
+  }
+}
+
+validateEnvironment();
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
+// Request parsing with explicit size limits to reduce abuse and accidental oversized payloads.
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+
+const defaultOrigins = isProduction
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+const allowedOrigins = new Set(defaultOrigins.filter(Boolean));
+
+app.use(cors({
+  origin(origin, callback) {
+    // Non-browser/server-to-server requests do not send an Origin header.
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
   credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  optionsSuccessStatus: 204
+}));
 
-// Add Content Security Policy headers
+// Security headers without an external middleware dependency.
 app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
-    "img-src 'self' data: https: blob:; " +
-    "font-src 'self' https://cdnjs.cloudflare.com data:; " +
-    "connect-src 'self' http://localhost:3001 http://localhost:3000 ws://localhost:3001 ws://localhost:3000; " +
-    "frame-src 'self'; " +
-    "object-src 'none'; " +
-    "base-uri 'self'; " +
-    "form-action 'self';"
+    [
+      "default-src 'self'",
+      "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' https://cdnjs.cloudflare.com data:",
+      "connect-src 'self' https:",
+      "frame-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'"
+    ].join('; ')
   );
+
+  if (isProduction) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   next();
 });
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-const notesUploadsDir = path.join(uploadsDir, 'notes');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Created uploads directory');
-}
-if (!fs.existsSync(notesUploadsDir)) {
-  fs.mkdirSync(notesUploadsDir, { recursive: true });
-  console.log('Created notes uploads directory');
-}
-
-// Serve uploads directory statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Session middleware
+// Session middleware remains for the legacy server-rendered login flow.
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'adhyayanclassessecret',
+  name: 'adhyayan.sid',
+  secret: process.env.SESSION_SECRET || 'dev-only-session-secret-change-me',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 } // 1 day
+  cookie: {
+    secure: isProduction,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+  }
 }));
 
-// Set view engine for EJS templates
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Serve static files from the public directory
-app.use(express.static('public'));
-// Also serve media files from client/public for development
-app.use(express.static(path.join(__dirname, 'client/public')));
+// Create uploads directory when needed. Uploaded files are served through an authenticated route,
+// not as a public static directory.
+const uploadsDir = path.join(__dirname, 'uploads');
+const notesUploadsDir = path.join(uploadsDir, 'notes');
+fs.mkdirSync(notesUploadsDir, { recursive: true });
 
-// Serve React app build files if they exist
-const buildPath = path.join(__dirname, 'client/build');
-const buildExists = fs.existsSync(buildPath);
-console.log('Build directory exists:', buildExists);
+app.use(express.static(path.join(__dirname, 'public')));
 
-if (buildExists) {
+// Serve the existing frontend build when it is present.
+const buildPath = path.join(__dirname, 'build');
+if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
-  console.log('Serving static files from', buildPath);
 }
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/adhyayan', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  retryWrites: true,
-  w: 'majority',
-  dbName: 'adhyayan'
-})
-  .then(() => {
-    console.log('Connected to MongoDB Atlas');
-    // Initialize file watcher after DB connection
-    initWatcher();
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+async function connectDatabase() {
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/adhyayan';
+  await mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    retryWrites: true,
+    w: 'majority'
+  });
+  console.log('MongoDB connection established');
+}
 
-// Add MongoDB connection event handlers
-mongoose.connection.on('connected', () => {
-  console.log('MongoDB connection established successfully');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
+mongoose.connection.on('error', (error) => {
+  console.error('MongoDB connection error:', error.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB connection disconnected');
+  console.warn('MongoDB connection disconnected');
 });
 
-// Handle application termination
-process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  console.log('MongoDB connection closed due to app termination');
-  process.exit(0);
-});
+app.get('/api/health', (req, res) => {
+  const dbStatus = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  }[mongoose.connection.readyState] || 'unknown';
 
-// Add a test route
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'API is working', 
-    timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  const healthy = mongoose.connection.readyState === 1;
+  return res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    server: 'running',
+    database: dbStatus,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
   });
 });
 
-// Add a health check route
-app.get('/api/health', (req, res) => {
-  try {
-    const dbStatus = mongoose.connection.readyState;
-    const dbStatusText = {
-      0: 'disconnected',
-      1: 'connected',
-      2: 'connecting',
-      3: 'disconnecting'
-    }[dbStatus] || 'unknown';
-    
-    res.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      server: 'running',
-      database: {
-        status: dbStatusText,
-        statusCode: dbStatus
-      },
-      uptime: process.uptime()
-    });
-  } catch (error) {
-    console.error('Health check error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
+app.get('/api/test', (req, res) => {
+  res.json({
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Import routes
 const authRoutes = require('./routes/auth');
 const teacherRoutes = require('./routes/teachers');
 const studentRoutes = require('./routes/students');
 const notesRoutes = require('./routes/notes');
 const testScoresRoutes = require('./routes/test-scores');
 const attendanceRoutes = require('./routes/attendance');
-const debugRoutes = require('./routes/debug');
 
-// Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/test-scores', testScoresRoutes);
 app.use('/api/attendance', attendanceRoutes);
-app.use('/api/debug', debugRoutes);
-console.log('Loaded API routes');
 
-// Add a global error handler
-app.use((err, req, res, next) => {
-  console.error('Global error handler caught:', err);
-  console.error('Error stack:', err.stack);
-  console.error('Request path:', req.path);
-  console.error('Request method:', req.method);
-  console.error('Request headers:', req.headers);
-  
-  res.status(500).json({
-    error: 'Server error',
-    message: err.message || 'An unexpected error occurred',
-    path: req.path,
-    method: req.method
-  });
-});
+// Debug endpoints are development-only and are never exposed in production.
+if (!isProduction) {
+  const debugRoutes = require('./routes/debug');
+  app.use('/api/debug', debugRoutes);
+}
 
-// Add a catch-all route for API 404s
 app.use('/api/*', (req, res) => {
-  console.log('API route not found:', req.originalUrl);
   res.status(404).json({
     error: 'Not Found',
-    message: `API endpoint not found: ${req.originalUrl}`,
-    availableEndpoints: [
-      '/api/auth/*',
-      '/api/teachers/*',
-      '/api/students/*',
-      '/api/notes/*',
-      '/api/test-scores/*',
-      '/api/attendance/*',
-      '/api/debug/*'
-    ]
+    message: 'API endpoint not found'
   });
 });
 
-// Handle any other requests with our React app in production
-if (process.env.NODE_ENV === 'production') {
+app.use((err, req, res, next) => {
+  console.error('Unhandled request error:', err.message);
+
+  if (res.headersSent) return next(err);
+
+  if (err.message === 'Origin is not allowed by CORS') {
+    return res.status(403).json({ message: 'Origin is not allowed' });
+  }
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: 'Uploaded file exceeds the size limit' });
+  }
+
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ message: 'Invalid file upload request' });
+  }
+
+  return res.status(500).json({ message: 'Internal server error' });
+});
+
+if (isProduction && fs.existsSync(path.join(buildPath, 'index.html'))) {
   app.get('*', (req, res) => {
-    // Check if the file exists in the build directory
-    const filePath = path.join(__dirname, 'client/build', req.path);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      return res.sendFile(filePath);
-    }
-    
-    // Otherwise, serve the index.html file
-    console.log('Serving index.html for path:', req.path);
-    res.sendFile(path.join(__dirname, 'client/build/index.html'));
+    res.sendFile(path.join(buildPath, 'index.html'));
   });
 }
 
-// Setup server port
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`MongoDB connection: ${process.env.MONGODB_URI ? 'Atlas' : 'Local'}`);
+async function startServer() {
+  try {
+    await connectDatabase();
+    initWatcher();
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Adhyayan API listening on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
+  }
+}
+
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  process.exit(0);
 });
 
-module.exports = app; 
+process.on('SIGTERM', async () => {
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
