@@ -6,6 +6,10 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const session = require('express-session');
 const { initWatcher } = require('./utils/file-watcher');
+const Student = require('./models/Student');
+const Teacher = require('./models/Teacher');
+const Note = require('./models/Note');
+const { auth, isTeacher, isStudent } = require('./middleware/auth');
 
 dotenv.config();
 
@@ -33,19 +37,16 @@ if (isProduction) {
   app.set('trust proxy', 1);
 }
 
-// Request parsing with explicit size limits to reduce abuse and accidental oversized payloads.
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-const defaultOrigins = isProduction
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:3000', 'http://localhost:3001'];
-
-const allowedOrigins = new Set(defaultOrigins.filter(Boolean));
+const allowedOrigins = new Set(
+  (isProduction ? [process.env.FRONTEND_URL] : ['http://localhost:3000', 'http://localhost:3001'])
+    .filter(Boolean)
+);
 
 app.use(cors({
   origin(origin, callback) {
-    // Non-browser/server-to-server requests do not send an Origin header.
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS'));
   },
@@ -53,7 +54,6 @@ app.use(cors({
   optionsSuccessStatus: 204
 }));
 
-// Security headers without an external middleware dependency.
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -76,14 +76,13 @@ app.use((req, res, next) => {
       "frame-ancestors 'none'"
     ].join('; ')
   );
-
   if (isProduction) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
   next();
 });
 
-// Session middleware remains for the legacy server-rendered login flow.
+// Session middleware is retained for the legacy server-rendered login flow.
 app.use(session({
   name: 'adhyayan.sid',
   secret: process.env.SESSION_SECRET || 'dev-only-session-secret-change-me',
@@ -100,15 +99,12 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Create uploads directory when needed. Uploaded files are served through an authenticated route,
-// not as a public static directory.
 const uploadsDir = path.join(__dirname, 'uploads');
 const notesUploadsDir = path.join(uploadsDir, 'notes');
 fs.mkdirSync(notesUploadsDir, { recursive: true });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve the existing frontend build when it is present.
 const buildPath = path.join(__dirname, 'build');
 if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
@@ -152,10 +148,38 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-  res.json({
-    message: 'API is working',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// Uploaded notes are private application data. Access is checked before the file is sent.
+app.get('/uploads/notes/:filename', auth, async (req, res, next) => {
+  try {
+    const filename = path.basename(req.params.filename);
+    const relativeUrl = `/uploads/notes/${filename}`;
+    const note = await Note.findOne({ fileUrl: relativeUrl }).select('author targetBatches title fileUrl');
+
+    if (!note) return res.status(404).json({ message: 'File not found' });
+
+    if (req.user.role === 'teacher') {
+      if (String(note.author) !== req.user.id) {
+        return res.status(403).json({ message: 'You do not have access to this note' });
+      }
+    } else if (req.user.role === 'student') {
+      const student = await Student.findById(req.user.id).select('batch');
+      if (!student || !note.targetBatches.includes(student.batch)) {
+        return res.status(403).json({ message: 'You do not have access to this note' });
+      }
+    } else {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const filePath = path.join(notesUploadsDir, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'File not found' });
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    return next(error);
+  }
 });
 
 const authRoutes = require('./routes/auth');
@@ -166,38 +190,96 @@ const testScoresRoutes = require('./routes/test-scores');
 const attendanceRoutes = require('./routes/attendance');
 
 app.use('/api/auth', authRoutes);
-app.use('/api/teachers', teacherRoutes);
+
+// The legacy teacher router declares /:id before several named routes. These explicit
+// application-level routes guarantee the intended dashboard endpoints are reachable.
+app.get('/api/teachers', auth, isTeacher, async (req, res, next) => {
+  try {
+    const teachers = await Teacher.find().select('-password').sort({ name: 1 });
+    return res.json(teachers);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/teachers/me', auth, isTeacher, async (req, res, next) => {
+  try {
+    const teacher = await Teacher.findById(req.user.id).select('-password');
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+    return res.json(teacher);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/teachers/profile', auth, isTeacher, async (req, res, next) => {
+  try {
+    const teacher = await Teacher.findById(req.user.id).select('-password');
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+    return res.json(teacher);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/teachers/students', auth, isTeacher, async (req, res, next) => {
+  try {
+    const teacher = await Teacher.findById(req.user.id).select('batches');
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+    const students = await Student.find({ batch: { $in: teacher.batches || [] } })
+      .select('name username class batch phoneNumber dateOfAdmission')
+      .sort({ name: 1 });
+
+    return res.json(students);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/teachers/batches', auth, isTeacher, async (req, res, next) => {
+  try {
+    const teacher = await Teacher.findById(req.user.id).select('batches subjects');
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+    const batches = await Promise.all((teacher.batches || []).map(async (batch) => ({
+      _id: batch,
+      name: batch,
+      studentCount: await Student.countDocuments({ batch })
+    })));
+
+    return res.json(batches);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// All remaining teacher endpoints require teacher authentication.
+app.use('/api/teachers', auth, isTeacher, teacherRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/test-scores', testScoresRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-// Debug endpoints are development-only and are never exposed in production.
 if (!isProduction) {
   const debugRoutes = require('./routes/debug');
   app.use('/api/debug', debugRoutes);
 }
 
 app.use('/api/*', (req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'API endpoint not found'
-  });
+  res.status(404).json({ error: 'Not Found', message: 'API endpoint not found' });
 });
 
 app.use((err, req, res, next) => {
   console.error('Unhandled request error:', err.message);
 
   if (res.headersSent) return next(err);
-
   if (err.message === 'Origin is not allowed by CORS') {
     return res.status(403).json({ message: 'Origin is not allowed' });
   }
-
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ message: 'Uploaded file exceeds the size limit' });
   }
-
   if (err.name === 'MulterError') {
     return res.status(400).json({ message: 'Invalid file upload request' });
   }
