@@ -1,66 +1,88 @@
 # Adhyayan — Student Management Platform
 
-A full-stack student management platform for educational institutions, built with React, Node.js, Express, and MongoDB.
+Adhyayan is a full-stack student management platform for coaching and educational institutions. It provides separate teacher and student workflows for attendance, notes, test results, profiles, and batch-based access control.
 
 ## What it demonstrates
 
-- Role-based workflows for teachers and students
-- Authentication and protected API routes
+- Teacher and student authentication
+- Role-based authorization and batch-level access control
 - Attendance management
-- Study-note upload and download flows
+- Secure study-note upload and download flows
 - Test-score management
-- Student profile management
+- Student and teacher profile management
 - MongoDB-backed application data
-- Production-oriented deployment configuration for Render and Vercel
+- Production-oriented configuration and health checks
 
 ## Product flow
 
-**Teacher:** sign in → manage attendance → upload notes → record results
+**Teacher:** sign in → manage assigned batches → mark attendance → publish notes → record results
 
-**Student:** sign in → view attendance → download notes → check results → manage profile
+**Student:** sign in → view personal attendance → access batch notes → review results → manage profile
 
 ## Architecture
 
 ```text
-React client
+Browser / frontend build
+          │
+          ▼
+   Express / Node.js
+          │
+    ┌─────┼───────────────┐
+    ▼     ▼               ▼
+   Auth  REST API       File access
+    │     │               │
+    │     ├─ Students     └─ Authorization checks
+    │     ├─ Teachers
+    │     ├─ Attendance
+    │     ├─ Notes
+    │     └─ Test scores
     │
     ▼
-Express / Node.js API
-    │
-    ├── Authentication middleware
-    ├── REST routes
-    ├── Mongoose models
-    └── File uploads
-            │
-            ▼
-        MongoDB Atlas
+ JWT + session compatibility
+          │
+          ▼
+      MongoDB
 ```
 
-## Stack
+## Security hardening
 
-**Frontend:** React, CSS
+The current branch includes:
 
-**Backend:** Node.js, Express, JWT, bcrypt
+- JWT verification restricted to `Authorization: Bearer <token>`
+- Explicit JWT issuer, audience, and algorithm validation
+- No fallback production JWT/session secrets
+- Bcrypt password hashing with automatic migration of legacy plaintext records after successful login
+- Login rate limiting
+- Strict production environment validation
+- Restricted CORS configuration
+- Secure HTTP response headers and HSTS in production
+- Private note-file access checks
+- Development-only debug routes
+- Request-body size limits
+- Generic production error responses that avoid returning internal details
 
-**Database:** MongoDB, Mongoose
+See [`SECURITY.md`](SECURITY.md) for deployment and credential guidance.
 
-**Infrastructure:** Render / Vercel configuration
-
-## Project structure
+## Repository layout
 
 ```text
 Adhyayan/
-├── client/           # React application
-├── middleware/       # Authentication middleware
+├── build/            # Compiled frontend served by the Express application
+├── controllers/      # Domain controllers
+├── middleware/       # Authentication and authorization middleware
 ├── models/           # Mongoose models
-├── routes/           # API routes
-├── scripts/          # Database and deployment utilities
-├── public/           # Static assets
-├── server.js         # API entry point
-├── vercel.json
-├── render.yaml
+├── routes/           # REST API routes
+├── scripts/          # Database/setup utilities
+├── public/           # Static server assets
+├── views/            # Legacy server-rendered views
+├── server.js         # Application entry point
+├── build-client.js   # Verifies the shipped frontend build
+├── .env.example      # Safe local configuration template
+├── SECURITY.md
 └── package.json
 ```
+
+> The current public branch ships the frontend as a compiled `build/` artifact. It does not contain the original React `client/` source tree, so the build script verifies the shipped artifact rather than pretending to compile a missing source directory.
 
 ## Local development
 
@@ -68,53 +90,69 @@ Adhyayan/
 
 ```bash
 npm install
-cd client
-npm install
-cd ..
 ```
 
 ### 2. Configure environment variables
 
-Create a local `.env` file. Do not commit credentials.
+Copy `.env.example` to `.env` and replace the placeholder secrets.
 
 ```env
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_long_random_secret
-PORT=3000
 NODE_ENV=development
+PORT=3001
+MONGODB_URI=mongodb://127.0.0.1:27017/adhyayan
+JWT_SECRET=replace-with-a-long-random-secret
+SESSION_SECRET=replace-with-a-long-random-session-secret
+FRONTEND_URL=http://localhost:3000
 ```
 
-### 3. Start the application
+Never commit `.env` or real credentials.
 
-Backend:
+### 3. Start the application
 
 ```bash
 npm start
 ```
 
-Frontend:
+The API is available on the configured port. The root frontend build is served automatically when `build/index.html` is present.
+
+### 4. Verify the application
 
 ```bash
-npm run client
+npm test
+npm run build
 ```
 
-Or, when supported by the local environment:
+`npm test` performs a Node syntax check for the application entry point. `npm run build` verifies that the committed frontend artifact is present.
+
+## Authentication contract
+
+API requests that require authentication must use:
+
+```http
+Authorization: Bearer <jwt>
+```
+
+The server does not accept access tokens through query parameters or request bodies.
+
+## Database utilities
 
 ```bash
-npm run dev
+npm run init-db
+npm run populate-db
+npm run check-db
 ```
 
-## Production readiness notes
+Review imported data before running population utilities against a production database because the population script intentionally replaces existing student and teacher records.
 
-The repository includes deployment configuration and separates environment-specific credentials from source code. Before production use, verify database access controls, secret rotation, CORS origins, upload storage, logging, and HTTPS configuration.
+## Production notes
 
-## Security
+Set the required environment variables through the hosting provider's secret manager. Do not copy production credentials into the repository.
 
-Never place database passwords, JWT secrets, API keys, or other credentials in `README.md`, source files, or committed environment files. Use `.env` locally and platform-managed environment variables in production.
+The application now refuses to start in production when required secrets are missing or too short, and `/api/health` reports database health accurately.
 
 ## Status
 
-Portfolio project demonstrating end-to-end product development for an education use case.
+Hardened portfolio project demonstrating end-to-end product development, authentication, authorization, data modeling, file handling, and deployment-oriented backend engineering.
 
 ## License
 
